@@ -509,7 +509,7 @@ np.set_printoptions(threshold=np.inf)
 sio = socketio.Client()
 
 print("Connecting to server...")  # แสดง log ก่อนการเชื่อมต่อ
-sio.connect('http://localhost:5501')
+sio.connect('https://think-keng-api.onrender.com/')
 # sio.connect('https://16a8-171-6-111-222.ngrok-free.app/')
 
 print("Connected to server from python.")  # แสดง log เมื่อเชื่อมต่อสำเร็จ
