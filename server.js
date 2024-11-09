@@ -16,15 +16,53 @@ const io = socketIo(server, {
 // ใช้ cors กับ express
 app.use(cors());
 
+
+
 app.get('/', (req, res) => {
   res.send('Hello! Think keng!');
 });
 
+let pythonProcess;
+let pythonProcessCount = 0;
+
 io.on('connection', (socket) => {
   console.log('WebSocket client connected');
 
+  // pythonProcess = spawn('python', ['model.py']);
+  // pythonProcessCount++;
+  // console.log('pythonProcess executed', pythonProcessCount);
+
+  if (!pythonProcess) {
+    pythonProcess = spawn('python', ['model.py']);
+    pythonProcessCount++; 
+    // pythonProcess = spawn('python', ['test2.py']);
+    console.log('pythonProcess executed', pythonProcessCount);
+  }
+
   // เรียกใช้ yolo.py เมื่อมีการเชื่อมต่อ
-  const pythonProcess = spawn('python', ['model.py']);
+  // if (!pythonProcess) {
+  //   pythonProcess = spawn('python', ['model.py']);
+  //   console.log('pythonProcess executed');
+
+  //   socket.on('processed_frame', (frame) => {
+  //     io.emit('to_python_frame', frame);
+  //     // console.log("frame:", frame);
+  //   })
+    
+  
+  //   socket.on('from_python_frame', (frame) => {
+  //     // console.log("frame:", frame);
+  //     io.emit('result_frame', frame);
+  //   });
+  
+  //   socket.on('disconnect', () => {
+  //     console.log('WebSocket client disconnected');
+  //     if (pythonProcess) {
+  //       pythonProcess.kill(); // หยุดกระบวนการ Python เมื่อ client หลุด
+  //     }
+  //   });
+  // }
+  // pythonProcess = spawn('python', ['model.py']);
 
   pythonProcess.stdout.on('data', (data) => {
     console.log(`Output from Python script: ${data}`);
@@ -37,17 +75,25 @@ io.on('connection', (socket) => {
   pythonProcess.on('close', (code) => {
     console.log(`Python script exited with code ${code}`);
   });
+
+  socket.on('processed_frame', (frame) => {
+    // console.log("received frame from client:", frame);
+    io.emit('to_python_frame', frame);
+    // console.log("frame:", frame);
+  })
   
 
-  socket.on('video_frame', (frame) => {
+  socket.on('from_python_frame', (frame) => {
+    // console.log("received frame from python:", frame);
     // console.log("frame:", frame);
-    io.emit('processed_frame', frame);
+    io.emit('result_frame', frame);
   });
 
   socket.on('disconnect', () => {
     console.log('WebSocket client disconnected');
     if (pythonProcess) {
       pythonProcess.kill(); // หยุดกระบวนการ Python เมื่อ client หลุด
+      pythonProcess = null;
     }
   });
 });
